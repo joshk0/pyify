@@ -45,7 +45,7 @@ class oggFile(audioFile):
 	def getMetaData(self):
 		command = "vorbiscomment -l \"%s\"" % self.path
 		tags = os.popen(command).readlines()
-		tags = [(x[0], x[1]) for x in [x.split("=") for x in tags]]
+		tags = [(x[0], x[1].strip()) for x in [x.split("=") for x in tags]]
 		tags = dict(tags)
 		return tags
 	
