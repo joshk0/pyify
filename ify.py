@@ -12,18 +12,20 @@ class audioFile:
 	"""
 	
 	# use this constructor to instantiate a file in the
-	# source format. metadata is initialized from file tags
-	# using whatever method is appropriate.
-	def __init__(self, path):
+	# source format.
+	def __init__(self, path, metadata=None):
 		self.path     = path
 		(base, ext)   = os.path.splitext(os.path.basename(path))
-		self.type     = ext
 		self.name     = base
-		self.metadata = self.getMetaData()
+		if not metadata:
+			self.metadata = self.getMetaData()
 	
 	#default method simply returns the open file
-	def getAudioStream():
+	def getAudioStream(self):
 		return open(path, "r")
+	def encodeAudioStream(self, inputStream, destination):
+		outputStream = open(destination + self.path, "w")
+		outputStream.write(inputStream.read())
 		
 # reference audioFile implementation class
 class oggFile(audioFile):
@@ -60,7 +62,8 @@ class oggFile(audioFile):
 		for (key, value) in self.metadata.items():
 			if self.flags.has_key(key):
 				tagargs = tagargs + "%s \"%s\" " % (self.flags[key], value)
-		command = self.encode_command % (tagargs, destination)
+		command = self.encode_command % (tagargs, destination +
+				self.path)
 		print "debug: " + command
 		
 		(child_stdin, child_stdout) = os.popen2(command)
@@ -68,8 +71,20 @@ class oggFile(audioFile):
 		child_stdin.close()
 
 def process(files):
-	for file in files:
-		print file
+	for path in files:
+		if os.path.isdir(path):
+			print "Can't handle directories yet"
+		else:
+			basename, ext = os.path.splitext(path)
+			ext = ext[1:]
+			if not quiet:
+				print path
+				print "[%s -> %s]" % (ext, format)
+			inputFile = formats[ext](path)
+			outputFile = formats[format](basename + "." + format,
+				metadata=inputFile.metadata)
+			outputFile.encodeAudioStream(inputFile.getAudioStream(),
+				destination)
 
 #note that none of this is compatible of ify.pl
 def usage():
@@ -88,13 +103,16 @@ def usage():
 #uses gnu_getopts...there's also a realllllly nifty optparse module
 #lests you specify actions, default values, argument types, etc,
 #but this was easier on my brain at 12:00AM wednesday night
-destination = None
+destination = ""
 convert_regex = None
 format = "wav"
 force = False
 quiet = False
 delete = False
 dry_run = False
+
+# associates between extensions and conversion modules
+formats = {"wav" : audioFile, "ogg" : oggFile}
 
 try:
 	shortargs = "hd:o:fq"
@@ -106,19 +124,22 @@ try:
 				 "quiet", 
 				 "delete", 
 				 "dry-run"]
-	formats = ["mp3", "ogg", "flac", "wav"]
 				 
 	opts, args = getopt.gnu_getopt(sys.argv[1:], shortargs, longargs)
 	for (option, arg) in opts:
+		if option == "--help" or option == "-h":
+			usage()
+			sys.exit(0)
 		if option == "--destination" or option == "-d":
 			destination = arg
 		elif option == "--convert-regex":
 			convert_regex=arg
 		elif option == "--format" or option == "-o":
-			if arg in formats:
+			if formats.has_key(arg):
 				output_format = arg
 			else:
-				s = "Format  must be one of {%s}" % string.join(formats, ", ")
+				s = "Format must be one of {%s}" \
+				% string.join(formats.keys(), ", ")
 				raise getopt.GetoptError(s)
 		elif option == "--force" or "-f":
 			pass
@@ -135,7 +156,7 @@ try:
 	
 except getopt.GetoptError, error:
 	print "Error parsing arguments: %s %s" % (error.opt, error.msg)
-	usage()
+	print "try -h or --help option"
 	sys.exit()
 
 process(args)
