@@ -3,6 +3,7 @@
 import os
 import sys
 import string
+import getopt
 
 class audioFile:
 	"""Represents an abstraction of an audio file. Don't
@@ -66,8 +67,75 @@ class oggFile(audioFile):
 		child_stdin.write(input_stream.read())
 		child_stdin.close()
 
-#test
-theFile = oggFile("01.Les_Seigneurs.ogg")
-audio = theFile.getAudioStream()
-theFile.encodeAudioStream(audio, "test.ogg")
+def process(files):
+	for file in files:
+		print file
 
+#note that none of this is compatible of ify.pl
+def usage():
+	print """usage: ify.py [options] files
+	options:
+		-h or --help                this message
+		-d or --destionation=PATH   path to output directory
+		--convert-regex=EXPR        *josh, what does this do?*    
+		-o FMT or --format=FMT      convert files to this format
+		-f or --force               *what does this do?*
+		-q or --quiet               don't print any output
+		--delete                    delete originals after converting
+		--dry-run                   don't do anything, just print
+		                            output"""
+									
+#uses gnu_getopts...there's also a realllllly nifty optparse module
+#lests you specify actions, default values, argument types, etc,
+#but this was easier on my brain at 12:00AM wednesday night
+destination = None
+convert_regex = None
+format = "wav"
+force = False
+quiet = False
+delete = False
+dry_run = False
+
+try:
+	shortargs = "hd:o:fq"
+	longargs  = ["help", 
+	             "destination=", 
+				 "convert-regex=", 
+				 "format=", 
+				 "force",
+				 "quiet", 
+				 "delete", 
+				 "dry-run"]
+	formats = ["mp3", "ogg", "flac", "wav"]
+				 
+	opts, args = getopt.gnu_getopt(sys.argv[1:], shortargs, longargs)
+	for (option, arg) in opts:
+		if option == "--destination" or option == "-d":
+			destination = arg
+		elif option == "--convert-regex":
+			convert_regex=arg
+		elif option == "--format" or option == "-o":
+			if arg in formats:
+				output_format = arg
+			else:
+				s = "Format  must be one of {%s}" % string.join(formats, ", ")
+				raise getopt.GetoptError(s)
+		elif option == "--force" or "-f":
+			pass
+		elif option == "--quiet" or "-q":
+			quiet = True
+		elif option == "--delete" or "-r":
+			delete_originals = True
+		elif option == "--dry_run":
+			dry_run = True
+	if len(args) == 0:
+		raise getopt.GetoptError("No input file's")
+	elif False in [os.path.exists(file) for file in args]:
+		raise getopt.GetoptError("One or more input files does not exist!")
+	
+except getopt.GetoptError, error:
+	print "Error parsing arguments: %s %s" % (error.opt, error.msg)
+	usage()
+	sys.exit()
+
+process(args)
