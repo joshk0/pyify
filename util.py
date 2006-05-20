@@ -6,3 +6,19 @@ def forkexec(args):
 		os.execvp(args[0], args)
 	elif pid > 0:
 		os.wait()
+
+class audioFile:
+	"""Represents an abstraction of an audio file. Don't
+	instantiate this class directly. Instead instantiate
+	one of its subclasses.
+	"""
+	
+	# use this constructor to instantiate a file in the
+	# source format.
+	def __init__(self, path, metadata=None):
+		self.path     = path
+		(base, ext)   = os.path.splitext(os.path.basename(path))
+		self.name     = base
+		if not metadata:
+			self.metadata = self.getMetaData()
+	

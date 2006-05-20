@@ -4,77 +4,30 @@ import os
 import sys
 import string
 import getopt
+import glob
+import imp
 
-# Local imports.
-import util
+# Local imports into current namespace
+from util import *
 
-class audioFile:
-	"""Represents an abstraction of an audio file. Don't
-	instantiate this class directly. Instead instantiate
-	one of its subclasses.
-	"""
-	
-	# use this constructor to instantiate a file in the
-	# source format.
-	def __init__(self, path, metadata=None):
-		self.path     = path
-		(base, ext)   = os.path.splitext(os.path.basename(path))
-		self.name     = base
-		if not metadata:
-			self.metadata = self.getMetaData()
-	
-	#default method simply returns the open file
-	def getAudioStream(self):
-		return open(path, "r")
-	def encodeAudioStream(self, inputStream, destination):
-		outputStream = open(destination + self.path, "w")
-		outputStream.write(inputStream.read())
-		
-# reference audioFile implementation class
-class oggFile(audioFile):
-	"""ogg/vorbis module"""
-	
-	# return dictionary of file metadata
-	# key names are based on output of vorbiscomment
-	def getMetaData(self):
-		command = ["vorbiscomment", "-l", self.path]
-		tags = os.popen2(command)[1].readlines()
-		tags = [(x[0], x[1].strip()) for x in [x.split("=") for x in tags]]
-		tags = dict(tags)
-		return tags
-	
-	# return open file object with audio stream
-	def getAudioStream(self):
-		subargv = "ogg123 -d wav -q -f -".split()
-		subargv.append(self.path)
-		return os.popen2(subargv, 'b')[1]
+# prints a message appropriate to verbosity level
+#TODO variadic arguments 
 
-	def encodeAudioStream(self, input_stream, destination):
-		encode_command = ["oggenc", "-q4.5", "-Q", "-", "-o", destination]
-		tag_command = ["vorbiscomment", "-a", "-c", "-", destination]
-
-		forkexec(encode_command)
-		(i,o) = os.popen2(tag_command, 't')
-		# takes the dictionary, turns it into k=v pairs, and joins the k=v
-		# pairs with newlines
-		o.write(string.join([(string.join(x, "=")) for x in self.metadata.items()], "\n"))
-		o.close()
+def ify_print(message, *args):
+	if not quiet:
+		print message
 
 def process(files):
 	for path in files:
 		if os.path.isdir(path):
-			print "Can't handle directories yet"
+			print "Can't handle directories yet, skipping!"
 		else:
 			basename, ext = os.path.splitext(path)
 			ext = ext[1:]
-			if not quiet:
-				print path
-				print "[%s->%s]" % (ext, format)
-			inputFile = formats[ext](path)
-			outputFile = formats[format](basename + "." + format,
-				metadata=inputFile.metadata)
-			outputFile.encodeAudioStream(inputFile.getAudioStream(),
-				destination)
+			targetname = basename + "." + format
+			ify_print("%s\n[%s->%s]" % (path, ext, format))
+			#TODO -- rewrite this portion of the code 
+			#based on whatever our plugin architecture is
 
 #note that none of this is compatible of ify.pl
 def usage():
@@ -101,10 +54,30 @@ force = False
 quiet = False
 delete = False
 dry_run = False
+#TODO add option to change this default
+plugins_dir = "formats"
 
-# associates between extensions and conversion modules
-formats = {"wav" : audioFile, "ogg" : oggFile}
+# build formats data structure
+formats = dict()
+	
+try:
+	for path in os.listdir(plugins_dir):
+		path = os.path.join(plugins_dir, path)
+		if os.path.isfile(path):
+			name, ext = os.path.splitext(os.path.basename(path))
+			file = open(path, "r")
+			if ext == ".py":
+				ify_print ("Loading module %s..." % name)
+				plugin = imp.load_source(name, path, file)
+				formats[plugin.format] = plugin
+			elif ext == ".pyc":
+				pass
+			else:
+				ify_print("Invalid suffix %s. for file %s" % (ext, path))
 
+except ImportError, error:
+	print "Import error has occured: %r" % error.args
+	
 try:
 	shortargs = "hd:o:fq"
 	longargs  = ["help", 
