@@ -37,8 +37,8 @@ class oggFile(audioFile):
 	# return dictionary of file metadata
 	# key names are based on output of vorbiscomment
 	def getMetaData(self):
-		command = "vorbiscomment -l \"%s\"" % self.path
-		tags = os.popen(command).readlines()
+		command = ["vorbiscomment", "-l", self.path]
+		tags = os.popen2(command)[1].readlines()
 		tags = [(x[0], x[1].strip()) for x in [x.split("=") for x in tags]]
 		tags = dict(tags)
 		return tags
