@@ -13,10 +13,6 @@ from util import *
 # prints a message appropriate to verbosity level
 #TODO variadic arguments 
 
-def ify_print(message, *args):
-	if not quiet:
-		print message
-
 def process(files):
 	for path in files:
 		if os.path.isdir(path):
