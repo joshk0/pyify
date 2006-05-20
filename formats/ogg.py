@@ -17,7 +17,7 @@ def getAudioStream(path):
 	subargv.append(path)
 	return os.popen2(subargv, 'b')[1]
 
-def encodeAudioStream(input_stream, destination, metadata):
+def encodeAudioStream(input_stream, destination, metadata=dict()):
 	encode_command = ["oggenc", "-q4.5", "-Q", "-", "-o", destination]
 	tag_command = ["vorbiscomment", "-a", "-c", "-", destination]
 

@@ -10,6 +10,11 @@ import imp
 # Local imports into current namespace
 from util import *
 
+#requires access to global "quiet", so it must be in this file
+def ify_print(message, *args):
+	if not quiet:
+		print message % tuple(args)
+
 # prints a message appropriate to verbosity level
 #TODO variadic arguments 
 
@@ -21,7 +26,7 @@ def process(files):
 			basename, ext = os.path.splitext(path)
 			ext = ext[1:]
 			targetname = basename + "." + format
-			ify_print("%s\n[%s->%s]" % (path, ext, format))
+			ify_print("%s\n[%s->%s]", path, ext, format)
 			#TODO -- rewrite this portion of the code 
 			#based on whatever our plugin architecture is
 
@@ -51,29 +56,9 @@ quiet = False
 delete = False
 dry_run = False
 #TODO add option to change this default
-plugins_dir = "formats"
+plugin_dir = "formats"
 
 # build formats data structure
-formats = dict()
-	
-try:
-	for path in os.listdir(plugins_dir):
-		path = os.path.join(plugins_dir, path)
-		if os.path.isfile(path):
-			name, ext = os.path.splitext(os.path.basename(path))
-			file = open(path, "r")
-			if ext == ".py":
-				ify_print ("Loading module %s..." % name)
-				plugin = imp.load_source(name, path, file)
-				formats[plugin.format] = plugin
-			elif ext == ".pyc":
-				pass
-			else:
-				ify_print("Invalid suffix %s. for file %s" % (ext, path))
-
-except ImportError, error:
-	print "Import error has occured: %r" % error.args
-	
 try:
 	shortargs = "hd:o:fq"
 	longargs  = ["help", 
@@ -83,7 +68,8 @@ try:
 				 "force",
 				 "quiet", 
 				 "delete", 
-				 "dry-run"]
+				 "dry-run",
+				 "plugin-dir"]
 				 
 	opts, args = getopt.gnu_getopt(sys.argv[1:], shortargs, longargs)
 	for (option, arg) in opts:
@@ -95,11 +81,7 @@ try:
 		elif option == "--convert-regex":
 			convert_regex=arg
 		elif option == "--format" or option == "-o":
-			if formats.has_key(arg):
-				output_format = arg
-			else:
-				s = "Format must be one of {%s}" % string.join(formats.keys(), ", ")
-				raise getopt.GetoptError(s)
+			output_format = arg
 		elif option == "--force" or "-f":
 			pass
 		elif option == "--quiet" or "-q":
@@ -108,11 +90,37 @@ try:
 			delete_originals = True
 		elif option == "--dry_run":
 			dry_run = True
+		elif option == "plugin-dir":
+			plugin_dir = arg
 	if len(args) == 0:
 		raise getopt.GetoptError("No input files")
 	elif False in [os.path.exists(file) for file in args]:
 		raise getopt.GetoptError("One or more input files does not exist!")
 	
+	# build formats data structure
+	formats = dict()
+		
+	try:
+		for path in os.listdir(plugin_dir):
+			path = os.path.join(plugin_dir, path)
+			if os.path.isfile(path):
+				name, ext = os.path.splitext(os.path.basename(path))
+				file = open(path, "r")
+				if ext == ".py":
+					ify_print ("Loading module %s...", name)
+					plugin = imp.load_source(name, path, file)
+					formats[plugin.format] = plugin
+				elif ext == ".pyc":
+					pass
+				else:
+					ify_print("Can't load plugin %s, inavlid suffix", ext, path)
+		if not formats.has_key(format):
+			raise getopt.GetoptError("Format must be one of {%s}" %
+					string.join(formats.keys()))
+
+	except ImportError, error:
+		print "Import error has occured: %r" % error.args
+
 except getopt.GetoptError, error:
 	print "Error parsing arguments: %s %s\n" % (error.opt, error.msg)
 	print "List of accepted arguments:"

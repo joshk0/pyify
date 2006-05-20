@@ -1,9 +1,5 @@
 from os import popen2
 
-def ify_print(message, *args):
-	if not quiet:
-		print message
-
 def forkexec(args):
 	pid = os.fork()
 	if pid == 0:
