@@ -3,11 +3,13 @@ import shutil
 
 format = "wav"
 
-def getAudioStream(self):
+def getMetadata(path):
+	return dict()
+	
+def getAudioStream(path):
 	return open(path, "r")
 	
-def encodeAudioStream(self, inputStream, destination):
-	outputStream = open(destination + self.path, "w")
+def encodeAudioStream(inputStream, destination, metadata=None):
+	outputStream = open(destination, "w")
 	shutil.copyfileobj(inputStream, outputStream)
 	outputStream.close()
-

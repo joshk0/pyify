@@ -10,14 +10,6 @@ import imp
 # Local imports into current namespace
 from util import *
 
-#requires access to global "quiet", so it must be in this file
-def ify_print(message, *args):
-	if not quiet:
-		print message % tuple(args)
-
-# prints a message appropriate to verbosity level
-#TODO variadic arguments 
-
 def process(files):
 	for path in files:
 		if os.path.isdir(path):
@@ -29,6 +21,12 @@ def process(files):
 			ify_print("%s\n[%s->%s]", path, ext, format)
 			#TODO -- rewrite this portion of the code 
 			#based on whatever our plugin architecture is
+			if not dry_run:
+				decode_plugin = formats[ext]
+				encode_plugin = formats[format]
+				tags  = decode_plugin.getMetadata(path)
+				audio = decode_plugin.getAudioStream(path)
+				encode_plugin.encodeAudioStream(audio, targetname, tags)
 
 #note that none of this is compatible of ify.pl
 def usage():
@@ -69,7 +67,7 @@ try:
 				 "quiet", 
 				 "delete", 
 				 "dry-run",
-				 "plugin-dir"]
+				 "plugin-dir="]
 				 
 	opts, args = getopt.gnu_getopt(sys.argv[1:], shortargs, longargs)
 	for (option, arg) in opts:
@@ -81,17 +79,21 @@ try:
 		elif option == "--convert-regex":
 			convert_regex=arg
 		elif option == "--format" or option == "-o":
-			output_format = arg
-		elif option == "--force" or "-f":
+			format = arg
+		elif option == "--force" or option == "-f":
 			pass
-		elif option == "--quiet" or "-q":
+		elif option == "--quiet" or option == "-q":
 			quiet = True
-		elif option == "--delete" or "-r":
+		elif option == "--delete" or option == "-r":
 			delete_originals = True
 		elif option == "--dry_run":
 			dry_run = True
-		elif option == "plugin-dir":
-			plugin_dir = arg
+		elif option == "--plugin-dir":
+			if os.path.exists(arg):
+				plugin_dir = arg
+			else:
+				print "Error: plugin-dir does not exist"
+				sys.exit(-1)
 	if len(args) == 0:
 		raise getopt.GetoptError("No input files")
 	elif False in [os.path.exists(file) for file in args]:
@@ -113,7 +115,8 @@ try:
 				elif ext == ".pyc":
 					pass
 				else:
-					ify_print("Can't load plugin %s, inavlid suffix", ext, path)
+					ify_print("Can't load plugin %s, bad suffix \"%s\"", path,
+							ext)
 		if not formats.has_key(format):
 			raise getopt.GetoptError("Format must be one of {%s}" %
 					string.join(formats.keys()))

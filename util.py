@@ -1,11 +1,17 @@
-from os import popen2
+from os import popen2, fork, wait, execvp
 
 def forkexec(args):
-	pid = os.fork()
+	pid = fork()
 	if pid == 0:
-		os.execvp(args[0], args)
+		execvp(args[0], args)
 	elif pid > 0:
-		os.wait()
+		wait()
+
+# we have a global being defined here in util.py...is this bad idea?
+quiet = False
+def ify_print(message, *args):
+	if not quiet:
+		print message % tuple(args)
 
 class audioFile:
 	"""Represents an abstraction of an audio file. Don't
