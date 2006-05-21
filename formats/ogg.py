@@ -2,9 +2,7 @@
 
 import os
 import string
-import popen2
-from util import forkexec
-
+import shutil
 format = "ogg"
 
 # return a dictionary file of the metadata
@@ -25,12 +23,14 @@ def getAudioStream(path):
 def encodeAudioStream(input_stream, destination, metadata=dict()):
 	encode_command = ["oggenc", "-q4.5", "-Q", "-", "-o", destination]
 	tag_command = ["vorbiscomment", "-a", "-c", "-", destination]
-	#what about stdin??
-	forkexec(encode_command)
-	
-	(o,i) = os.popen2(tag_command, 't')
+	output_stream, stdout = os.popen2(encode_command)
+	shutil.copyfileobj(input_stream, output_stream)
+	output_stream.close()
+	stdout.close()
+	tag, stdout = os.popen2(tag_command, "wt")
 	# takes the dictionary, turns it into k=v pairs, and joins the k=v
 	# pairs with newlines
-	o.write(string.join([(string.join(x, "=")) for x in metadata.items()], "\n"))
-	o.close()
+	tag.write(string.join([(string.join(x, "=")) for x in metadata.items()], "\n"))
+	tag.close()
+	stdout.close()
 
