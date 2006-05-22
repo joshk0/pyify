@@ -18,9 +18,7 @@ def process(files):
 			basename, ext = os.path.splitext(path)
 			ext = ext[1:]
 			targetname = basename + "." + format
-			ify_print("%s\n[%s->%s]", path, ext, format)
-			#TODO -- rewrite this portion of the code 
-			#based on whatever our plugin architecture is
+			ify_print("[%s->%s] %s", ext, format, path)
 			if not dry_run:
 				decode_plugin = formats[ext]
 				encode_plugin = formats[format]
