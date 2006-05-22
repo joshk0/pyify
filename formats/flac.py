@@ -2,7 +2,7 @@
 
 import os
 import string
-import shutil
+from util import copyfileobj
 format = "flac"
 
 # return a dictionary file of the metadata
@@ -23,7 +23,7 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	encode_command = ["flac", "-f", "-s", "-8", "-", "-o", destination]
 	tag_command = ["metaflac", "--import-tags-from=-", destination]
 	output_stream, stdout = os.popen2(encode_command)
-	shutil.copyfileobj(input_stream, output_stream)
+	copyfileobj(input_stream, output_stream)
 	output_stream.close()
 	stdout.close()
 	tag, stdout = os.popen2(tag_command, "wt")

@@ -3,7 +3,7 @@
 import os
 import string
 import popen2
-import shutil
+from util import copyfileobj
 
 format = "mp3"
 
@@ -46,6 +46,6 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	print encode_command
 	
 	(encode_stream, stdout) = os.popen2(encode_command, 'b')
-	shutil.copyfileobj(input_stream, encode_stream)
+	copyfileobj(input_stream, encode_stream)
 	encode_stream.close()
 	stdout.close()
