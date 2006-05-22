@@ -1,14 +1,14 @@
-"""ogg/vorbis module for pyify"""
+"""FLAC module for pyify, nearly identical to ogg"""
 
 import os
 import string
 import shutil
-format = "ogg"
+format = "flac"
 
 # return a dictionary file of the metadata
 # key names are based on output of vorbiscomment
 def getMetadata(path):
-	command = ["vorbiscomment", "-l", path]
+	command = ["metaflac", "--export-tags-to=-", path]
 	tags = os.popen2(command)[1].readlines()
 	tags = [(x[0].lower(), x[1].strip()) for x in [x.split("=") for x in tags]]
 	tags = dict(tags)
@@ -16,12 +16,12 @@ def getMetadata(path):
 
 # return open file object with audio stream
 def getAudioStream(path):
-	subargv = ["ogg123", "-d", "wav", "-q", "-f", "-", path]
+	subargv = ["flac", "-s", "-d", "-o", "-", path]
 	return os.popen2(subargv, 'b')[1]
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
-	encode_command = ["oggenc", "-q4.5", "-Q", "-", "-o", destination]
-	tag_command = ["vorbiscomment", "-a", "-c", "-", destination]
+	encode_command = ["flac", "-f", "-s", "-8", "-", "-o", destination]
+	tag_command = ["metaflac", "--import-tags-from=-", destination]
 	output_stream, stdout = os.popen2(encode_command)
 	shutil.copyfileobj(input_stream, output_stream)
 	output_stream.close()

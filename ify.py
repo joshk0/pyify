@@ -31,15 +31,14 @@ def usage():
 	print """usage: ify.py [options] files
 	options:
 		-h or --help                  this message
-		-d or --destionation=PATH     path to output directory
+		-d or --destination=PATH      path to output directory
 		--convert-formats=FMT,FMT2..  only select files in FMT for conversion
 		-o FMT or --format=FMT        convert files to this format
 		-f or --force                 convert even if output file is already
 	                                  present
 		-q or --quiet                 don't print any output
 		--delete                      delete originals after converting
-		--dry-run                     don't do anything, just print
-		                              output"""
+		--dry-run                     don't do anything, just print actions"""
 									
 #uses gnu_getopts...there's also a realllllly nifty optparse module
 #lests you specify actions, default values, argument types, etc,

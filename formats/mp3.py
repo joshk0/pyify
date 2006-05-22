@@ -38,8 +38,8 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	#[encode_command.extend(['--t' + tag_bind[tag[0]], tag[1]]) 
 	# for tag in metadata.items()]
 	for key, flag in tag_bind.items():
-		if metadata.has_key(key.upper()):
-			encode_command.extend(["--t"+ flag, metadata[key.upper()]])
+		if metadata.has_key(key.lower()):
+			encode_command.extend(["--t"+ flag, metadata[key.lower()]])
 	 
 	encode_command.extend(['-', destination])
 
