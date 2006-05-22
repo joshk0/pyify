@@ -18,12 +18,12 @@ def getAudioStream(path):
 	return os.popen2(subargv, 'b')[1]
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
-	tag_bind = { 'artist': 'a', 
-				 'title': 't', 
-				 'album': 'l',
-				 'date': 'y',
-				 'genre': 'g',
-				 'tracknumber': 'n' }
+	tag_bind = { 'ARTIST': 'a', 
+				 'TITLE': 't', 
+				 'ALBUM': 'l',
+				 'DATE': 'y',
+				 'GENRE': 'g',
+				 'TRACKNUMBER': 'n' }
 	
 	encode_command = ["lame", 
 	"--alt-preset", 
@@ -38,8 +38,8 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	#[encode_command.extend(['--t' + tag_bind[tag[0]], tag[1]]) 
 	# for tag in metadata.items()]
 	for key, flag in tag_bind.items():
-		if metadata.has_key(key.lower()):
-			encode_command.extend(["--t"+ flag, metadata[key.lower()]])
+		if metadata.has_key(key):
+			encode_command.extend(["--t"+ flag, metadata[key]])
 	 
 	encode_command.extend(['-', destination])
 
