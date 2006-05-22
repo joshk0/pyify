@@ -50,7 +50,6 @@ force = False
 quiet = False
 delete = False
 dry_run = False
-#TODO add option to change this default
 plugin_dir = "formats"
 
 # build formats data structure
@@ -58,7 +57,8 @@ try:
 	shortargs = "hd:o:fq"
 	longargs  = ["help", 
 	             "destination=", 
-				 "convert-regex=", 
+				 #changed from convert-regex
+				 "convert-formats=", 
 				 "format=", 
 				 "force",
 				 "quiet", 
