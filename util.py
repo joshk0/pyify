@@ -6,6 +6,12 @@ def forkexec(args):
 		execvp(args[0], args)
 	elif pid > 0:
 		wait()
+#replacement for shutil.copyfileobj that works
+def copyfileobj(src, dst):
+	buffer = src.read(4096)
+	while buffer != "":
+		dst.write(buffer)
+		src.read(4096)
 
 # we have a global being defined here in util.py...is this bad idea?
 quiet = False

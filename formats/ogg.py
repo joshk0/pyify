@@ -2,7 +2,7 @@
 
 import os
 import string
-import shutil
+from util import copyfileobj
 format = "ogg"
 
 # return a dictionary file of the metadata
@@ -23,7 +23,7 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	encode_command = ["oggenc", "-q4.5", "-Q", "-", "-o", destination]
 	tag_command = ["vorbiscomment", "-a", "-c", "-", destination]
 	output_stream, stdout = os.popen2(encode_command)
-	shutil.copyfileobj(input_stream, output_stream)
+	copyfileobj(input_stream, output_stream)
 	output_stream.close()
 	stdout.close()
 	tag, stdout = os.popen2(tag_command, "wt")
