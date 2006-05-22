@@ -1,4 +1,4 @@
-"""ogg/vorbis module for pyify"""
+"""mp3 module for pyify"""
 
 import os
 import string
@@ -18,15 +18,29 @@ def getAudioStream(path):
 	return os.popen2(subargv, 'b')[1]
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
-	tag_bind = { 'artist': 'a', \
-				 'title': 't', \
-				 'album': 'l', \
-				 'date': 'y', \
-				 'genre': 'g', \
+	tag_bind = { 'artist': 'a', 
+				 'title': 't', 
+				 'album': 'l',
+				 'date': 'y',
+				 'genre': 'g',
 				 'tracknumber': 'n' }
 	
-	encode_command = ["lame", "--alt-preset", "standard", "--quiet", "--ignore-tag-errors", "--add-id3v2"]
-	[encode_command.extend(['--t' + tag_bind[tag[0]], tag[1]]) for tag in metadata.items()]
+	encode_command = ["lame", 
+	"--alt-preset", 
+	"standard", 
+	"--quiet", 
+	"--ignore-tag-errors", 
+	"--add-id3v2"]
+	
+	#converting *all* metadata keys to upper case equivilents here
+	#also, iteratong only over the files supported by the encoder is 
+	#probably the only way to prevent key errors.
+	#[encode_command.extend(['--t' + tag_bind[tag[0]], tag[1]]) 
+	# for tag in metadata.items()]
+	for key, flag in tag_bind.items():
+		if metadata.has_key(key.upper()):
+			encode_command.extend(["--t"+ flag, metadata[key.upper()]])
+	 
 	encode_command.extend(['-', destination])
 
 	print encode_command
