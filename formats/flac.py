@@ -16,16 +16,14 @@ def getMetadata(path):
 
 # return open file object with audio stream
 def getAudioStream(path):
-	subargv = ["flac", "-s", "-d", "-o", "-", path]
+	subargv = ["flac", "-s", "-d", "-c", path]
 	return os.popen2(subargv, 'b')[1]
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
 	encode_command = ["flac", "-f", "-s", "-8", "-", "-o", destination]
 	tag_command = ["metaflac", "--import-tags-from=-", destination]
-	output_stream, stdout = os.popen2(encode_command)
+	output_stream = os.popen2(encode_command,"wb")[0]
 	copyfileobj(input_stream, output_stream)
-	output_stream.close()
-	stdout.close()
 	tag, stdout = os.popen2(tag_command, "wt")
 	# takes the dictionary, turns it into k=v pairs, and joins the k=v
 	# pairs with newlines

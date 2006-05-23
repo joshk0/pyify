@@ -24,12 +24,8 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	tag_command = ["vorbiscomment", "-a", "-c", "-", destination]
 	output_stream, stdout = os.popen2(encode_command)
 	copyfileobj(input_stream, output_stream)
-	output_stream.close()
-	stdout.close()
 	tag, stdout = os.popen2(tag_command, "wt")
 	# takes the dictionary, turns it into k=v pairs, and joins the k=v
 	# pairs with newlines
 	tag.write(string.join([(string.join(x, "=")) for x in metadata.items()], "\n"))
-	tag.close()
-	stdout.close()
 

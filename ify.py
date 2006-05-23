@@ -10,21 +10,41 @@ import imp
 # Local imports into current namespace
 from util import *
 
-def process(files):
-	for path in files:
-		if os.path.isdir(path):
-			print "Can't handle directories yet, skipping!"
-		else:
-			basename, ext = os.path.splitext(path)
-			ext = ext[1:]
-			targetname = basename + "." + format
-			ify_print("[%s->%s] %s", ext, format, path)
-			if not dry_run:
-				decode_plugin = formats[ext]
-				encode_plugin = formats[format]
-				tags  = decode_plugin.getMetadata(path)
-				audio = decode_plugin.getAudioStream(path)
-				encode_plugin.encodeAudioStream(audio, targetname, tags)
+def process_file(path):
+	basename, ext = os.path.splitext(path)
+	ext = ext[1:]
+	if formats.has_key(ext):
+		process_audio_file(path, basename, ext)
+	elif ext == "m3u":
+		process_playlist(path)
+	else:
+		ify_print("Error, unsupported file format \"%s\"", ext)
+	
+def process_audio_file(path, basename, ext):
+	targetname = os.path.join(destination, basename + "." + format)
+	ify_print("[%s->%s] %s", ext, format, path)
+	if not dry_run:
+		decode_plugin = formats[ext]
+		encode_plugin = formats[format]
+		tags  = decode_plugin.getMetadata(path)
+		audio = decode_plugin.getAudioStream(path)
+		encode_plugin.encodeAudioStream(audio, targetname, tags)
+
+def process_playlist(path):
+	ify_print("[playlist]")
+	print "Playlists are not yet supported!"
+	
+def process_dir(path):
+	ify_print("[directory]")
+	print "Directories unsupported!"
+
+def process(arg):
+	if os.path.isfile(arg):
+		process_file(arg)
+	elif os.path.isdir(arg):
+		process_dir(path)
+	else:
+		ify_print("Error: unrecognized argument \"%s\"", path)
 
 #note that none of this is compatible of ify.pl
 def usage():
@@ -127,4 +147,5 @@ except getopt.GetoptError, error:
 	usage()
 	sys.exit(1)
 
-process(args)
+for arg in args:
+	process(arg)
