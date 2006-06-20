@@ -14,35 +14,73 @@ def process_file(path):
 	basename, ext = os.path.splitext(path)
 	ext = ext[1:]
 	if formats.has_key(ext):
-		process_audio_file(path, basename, ext)
+		process_audio_file(path, os.path.join(destination, os.path.basename(path)))
 	elif ext == "m3u":
 		process_playlist(path)
 	else:
 		ify_print("Error, unsupported file format \"%s\"", ext)
 	
-def process_audio_file(path, basename, ext):
-	targetname = os.path.join(destination, basename + "." + format)
-	ify_print("[%s->%s] %s", ext, format, path)
+# format is already covered
+def process_audio_file(from_path, to_path):
+	''' Does no more and no less than taking the file in from_path,
+	    using its extension to determine its file type, and converting
+		it to the format specified in the eponymous variable to the file
+		specified in to_path. '''
+
+	old_ext = os.path.splitext(from_path)[1][1:]
+
+	ify_print("[%s->%s] %s", old_ext, format, from_path)
+	
 	if not dry_run:
-		decode_plugin = formats[ext]
+		decode_plugin = formats[old_ext]
 		encode_plugin = formats[format]
-		tags  = decode_plugin.getMetadata(path)
-		audio = decode_plugin.getAudioStream(path)
-		encode_plugin.encodeAudioStream(audio, targetname, tags)
+		tags  = decode_plugin.getMetadata(from_path)
+		audio = decode_plugin.getAudioStream(from_path)
+		try: encode_plugin.encodeAudioStream(audio, to_path, tags)
+		except KeyboardInterrupt:
+			print "[deleted] %s" % to_path
+			os.unlink(to_path)
+			sys.exit(1)
 
 def process_playlist(path):
 	ify_print("[playlist]")
 	print "Playlists are not yet supported!"
 	
-def process_dir(path):
-	ify_print("[directory]")
-	print "Directories unsupported!"
+def process_dir(path, prefix=""):
+	containing_dir = os.path.basename(path) # current toplevel path
+	target_dir = os.path.join(destination, prefix, containing_dir)
+	
+	ify_print("[directory] %s" % target_dir)
+
+	if not dry_run and not os.path.isdir(target_dir):
+		os.mkdir(target_dir)
+
+	listing = os.listdir(path)
+	
+	def sort_alpha(a, b):
+		if a.lower() < b.lower():
+			return -1
+		elif a.lower() > b.lower():
+			return 1
+		else:
+			return 0
+	
+	listing.sort(sort_alpha)
+	
+	for file in listing:
+		file_fullpath = os.path.join(path, file)
+		if os.path.isdir(file_fullpath):
+			process_dir(file_fullpath, os.path.join(prefix, containing_dir))
+		elif os.path.isfile(file_fullpath):
+			(basename, ext) = os.path.splitext(file)
+			if ext[1:] in formats:
+				process_audio_file(file_fullpath, os.path.join(destination, prefix, containing_dir, os.path.splitext(file)[0] + "." + format))
 
 def process(arg):
 	if os.path.isfile(arg):
 		process_file(arg)
 	elif os.path.isdir(arg):
-		process_dir(path)
+		process_dir(arg)
 	else:
 		ify_print("Error: unrecognized argument \"%s\"", path)
 
@@ -63,14 +101,14 @@ def usage():
 #uses gnu_getopts...there's also a realllllly nifty optparse module
 #lests you specify actions, default values, argument types, etc,
 #but this was easier on my brain at 12:00AM wednesday night
-destination = ""
+destination = os.getcwd()
 convert_regex = None
 format = "wav"
 force = False
 quiet = False
 delete = False
 dry_run = False
-plugin_dir = "formats"
+plugin_dir = os.path.join(sys.path[0], "formats")
 
 # build formats data structure
 try:
@@ -103,7 +141,7 @@ try:
 			quiet = True
 		elif option == "--delete" or option == "-r":
 			delete_originals = True
-		elif option == "--dry_run":
+		elif option == "--dry-run":
 			dry_run = True
 		elif option == "--plugin-dir":
 			if os.path.exists(arg):
