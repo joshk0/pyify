@@ -43,7 +43,7 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	 
 	encode_command.extend(['-', destination])
 
-	print encode_command
+	#print encode_command
 	
 	(encode_stream, stdout) = os.popen2(encode_command, 'b')
 	copyfileobj(input_stream, encode_stream)
