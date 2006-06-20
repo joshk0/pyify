@@ -102,7 +102,7 @@ def usage():
 #lests you specify actions, default values, argument types, etc,
 #but this was easier on my brain at 12:00AM wednesday night
 destination = os.getcwd()
-convert_regex = None
+convert_formats = None
 format = "wav"
 force = False
 quiet = False
@@ -115,7 +115,7 @@ try:
 	shortargs = "hd:o:fq"
 	longargs  = ["help", 
 	             "destination=", 
-				 #changed from convert-regex
+				 #changed from convert-formats
 				 "convert-formats=", 
 				 "format=", 
 				 "force",
@@ -131,8 +131,8 @@ try:
 			sys.exit(0)
 		if option == "--destination" or option == "-d":
 			destination = arg
-		elif option == "--convert-regex":
-			convert_regex=arg
+		elif option == "--convert-formats":
+			convert_formats=arg
 		elif option == "--format" or option == "-o":
 			format = arg
 		elif option == "--force" or option == "-f":
@@ -164,7 +164,7 @@ try:
 				name, ext = os.path.splitext(os.path.basename(path))
 				file = open(path, "r")
 				if ext == ".py":
-					ify_print ("Loading module %s...", name)
+					# ify_print ("Loading module %s...", name)
 					plugin = imp.load_source(name, path, file)
 					formats[plugin.format] = plugin
 				elif ext == ".pyc":
@@ -172,7 +172,7 @@ try:
 				else:
 					ify_print("Can't load plugin %s, bad suffix \"%s\"", path,
 							ext)
-		if not formats.has_key(format):
+		if not format in formats:
 			raise getopt.GetoptError("Format must be one of {%s}" %
 					string.join(formats.keys()))
 
