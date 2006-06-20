@@ -14,7 +14,8 @@ def process_file(path):
 	basename, ext = os.path.splitext(path)
 	ext = ext[1:]
 	if formats.has_key(ext):
-		process_audio_file(path, os.path.join(destination, os.path.basename(path)))
+		process_audio_file(path, os.path.join(destination, basename +
+					"." + format))
 	elif ext == "m3u":
 		process_playlist(path)
 	else:

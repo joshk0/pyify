@@ -3,7 +3,8 @@
 import os
 import string
 import popen2
-from util import copyfileobj
+#from util import copyfileobj
+from util import forkexec, copyfileobj
 
 format = "mp3"
 
@@ -42,10 +43,13 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 			encode_command.extend(["--t"+ flag, metadata[key]])
 	 
 	encode_command.extend(['-', destination])
-
 	#print encode_command
 	
-	(encode_stream, stdout) = os.popen2(encode_command, 'b')
-	copyfileobj(input_stream, encode_stream)
-	encode_stream.close()
-	stdout.close()
+	#(encode_stream, stdout) = os.popen2(encode_command, 'b')
+	#copyfileobj(input_stream, encode_stream)
+	#encode_stream.close()
+	#stdout.close()
+
+	forkexec(encode_command, file_stdin=input_stream)
+	input_stream.close()
+	
