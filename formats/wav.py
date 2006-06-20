@@ -1,5 +1,5 @@
 """ Wav module for ify"""
-import shutil
+from util import copyfileobj
 
 format = "wav"
 
@@ -11,5 +11,5 @@ def getAudioStream(path):
 	
 def encodeAudioStream(inputStream, destination, metadata=None):
 	outputStream = open(destination, "w")
-	shutil.copyfileobj(inputStream, outputStream)
+	copyfileobj(inputStream, outputStream)
 	outputStream.close()
