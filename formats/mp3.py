@@ -26,30 +26,18 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 				 'GENRE': 'g',
 				 'TRACKNUMBER': 'n' }
 	
-	encode_command = ["lame", 
-	"--alt-preset", 
-	"standard", 
-	"--quiet", 
-	"--ignore-tag-errors", 
-	"--add-id3v2"]
+	encode_command = ["lame", "--alt-preset", "standard", "--quiet", 
+		"--ignore-tag-errors", "--add-id3v2"]
 	
-	#converting *all* metadata keys to upper case equivilents here
-	#also, iteratong only over the files supported by the encoder is 
-	#probably the only way to prevent key errors.
-	#[encode_command.extend(['--t' + tag_bind[tag[0]], tag[1]]) 
-	# for tag in metadata.items()]
+	# converting *all* metadata keys to upper case equivalents here
+	# also, iterating only over the files supported by the encoder is 
+	# probably the only way to prevent key errors.
+	
 	for key, flag in tag_bind.items():
-		if metadata.has_key(key):
+		if key in metadata:
 			encode_command.extend(["--t"+ flag, metadata[key]])
 	 
 	encode_command.extend(['-', destination])
-	#print encode_command
-	
-	#(encode_stream, stdout) = os.popen2(encode_command, 'b')
-	#copyfileobj(input_stream, encode_stream)
-	#encode_stream.close()
-	#stdout.close()
 
 	forkexec(encode_command, file_stdin=input_stream)
 	input_stream.close()
-	

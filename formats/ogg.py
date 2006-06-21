@@ -21,11 +21,9 @@ def getAudioStream(path):
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
 	encode_command = ["oggenc", "-q4.5", "-Q", "-", "-o", destination]
-	tag_command = ["vorbiscomment", "-a", "-c", "-", destination]
-	output_stream, stdout = os.popen2(encode_command)
-	copyfileobj(input_stream, output_stream)
-	tag, stdout = os.popen2(tag_command, "wt")
-	# takes the dictionary, turns it into k=v pairs, and joins the k=v
-	# pairs with newlines
-	tag.write(string.join([(string.join(x, "=")) for x in metadata.items()], "\n"))
+	
+	for x in metadata.items():
+		encode_command.extend(["-c", string.join(x, "=")])
 
+	forkexec(encode_command, file_stdin=input_stream)
+	input_stream.close()
