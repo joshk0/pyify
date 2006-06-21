@@ -34,10 +34,19 @@ def process_audio_file(from_path, to_path):
 	''' Does no more and no less than taking the file in from_path,
 	    using its extension to determine its file type, and converting
 		it to the format specified in the eponymous variable to the file
-		specified in to_path. '''
+		specified in to_path.
+		
+		Well, it does do a little bit more - it will not overwrite an 
+		existing file if it's larger than 0 bytes, unless --force is
+		specified. '''
 
 	old_ext = os.path.splitext(from_path)[1][1:]
 
+	# [6] is filesize in bytes
+	if os.path.isfile(to_path) and os.stat(to_path)[6] > 0 and not force:
+		ify_print("[up-to-date] %s", to_path)
+		return
+		
 	ify_print("[%s->%s] %s", old_ext, format, from_path)
 	
 	if not dry_run:
@@ -150,7 +159,7 @@ try:
 		elif option == "--format" or option == "-o":
 			format = arg
 		elif option == "--force" or option == "-f":
-			pass
+			force = True
 		elif option == "--quiet" or option == "-q":
 			quiet = True
 		elif option == "--delete" or option == "-r":
@@ -161,8 +170,8 @@ try:
 			if os.path.exists(arg):
 				plugin_dir = arg
 			else:
-				print "Error: plugin-dir does not exist"
-				sys.exit(-1)
+				ify_error("plugin directory does not exist")
+				sys.exit(1)
 	if len(args) == 0:
 		raise getopt.GetoptError("No input files")
 	elif False in [os.path.exists(file) for file in args]:

@@ -37,6 +37,11 @@ def ify_warn(message, *args):
 	sys.stderr.write(message % tuple(args))
 	sys.stderr.write("\n")
 
+def ify_error(message, *args):
+	sys.stderr.write("Error: ")
+	sys.stderr.write(message % tuple(args))
+	sys.stderr.write("\n")
+
 class audioFile:
 	"""Represents an abstraction of an audio file. Don't
 	instantiate this class directly. Instead instantiate
