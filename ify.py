@@ -14,6 +14,14 @@ def process_file(path):
 	basename, ext = os.path.splitext(path)
 	ext = ext[1:]
 	if formats.has_key(ext):
+		# Be more vocal about this because the user passed the file in 
+		# explicitly, there's more of a chance that a botched --convert-formats
+		# arg was at fault.
+		if not check_want_convert(ext):
+			ify_warn("Skipping %s: not specified in --convert-formats!", 
+				os.path.basename(path))
+			return 1
+
 		process_audio_file(path, os.path.join(destination, basename +
 					"." + format))
 	elif ext == "m3u":
@@ -74,7 +82,7 @@ def process_dir(path, prefix=""):
 			process_dir(file_fullpath, os.path.join(prefix, containing_dir))
 		elif os.path.isfile(file_fullpath):
 			(basename, ext) = os.path.splitext(file)
-			if ext[1:] in formats:
+			if ext[1:] in formats and check_want_convert(ext[1:]):
 				process_audio_file(file_fullpath, os.path.join(destination, prefix, containing_dir, os.path.splitext(file)[0] + "." + format))
 
 def process(arg):
@@ -85,7 +93,12 @@ def process(arg):
 	else:
 		ify_print("Error: unrecognized argument \"%s\"", path)
 
-#note that none of this is compatible of ify.pl
+def check_want_convert(ext):
+	if convert_formats == None: return True
+	elif ext.lower() in convert_formats: return True
+	else: return False
+
+# note that none of this is compatible with ify.pl
 def usage():
 	print """usage: ify.py [options] files
 	options:
@@ -133,7 +146,7 @@ try:
 		if option == "--destination" or option == "-d":
 			destination = arg
 		elif option == "--convert-formats":
-			convert_formats=arg
+			convert_formats = arg.split(",")
 		elif option == "--format" or option == "-o":
 			format = arg
 		elif option == "--force" or option == "-f":

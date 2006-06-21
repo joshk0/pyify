@@ -32,6 +32,11 @@ def ify_print(message, *args):
 	if not quiet:
 		print message % tuple(args)
 
+def ify_warn(message, *args):
+	sys.stderr.write("Warning: ")
+	sys.stderr.write(message % tuple(args))
+	sys.stderr.write("\n")
+
 class audioFile:
 	"""Represents an abstraction of an audio file. Don't
 	instantiate this class directly. Instead instantiate
