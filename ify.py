@@ -8,6 +8,7 @@ import getopt
 import glob
 import imp
 import signal
+import mutex
 
 # Local imports into current namespace
 from util import *
@@ -36,9 +37,10 @@ jobs_running = 0 # XXX
 encoder_pids = dict() # XXX
 
 def encode_sighandler(signum, frame):
-	global jobs_running, encoder_pids
+	global jobs_running, encoder_pids, lock
 
 	pid = os.wait()[0]
+	
 	if pid in encoder_pids:
 		del encoder_pids[pid] # and carry on
 	else:
@@ -83,23 +85,20 @@ def process_audio_file_real(from_path, to_path):
 		Well, it does do a little bit more - it will not overwrite an 
 		existing file if it's larger than 0 bytes, unless --force is
 		specified. '''
+	global jobs_running
 
 	old_ext = os.path.splitext(from_path)[1][1:]
 		
-	ify_print("[%s->%s] %s", old_ext, format, from_path)
+	ify_print("(%d) [%s->%s] %s", jobs_running, old_ext, format, from_path)
 	
 	if not dry_run:
 		decode_plugin = formats[old_ext]
 		encode_plugin = formats[format]
 		tags  = decode_plugin.getMetadata(from_path)
 		audio = decode_plugin.getAudioStream(from_path)
-		try:
-			pid = encode_plugin.encodeAudioStream(audio, to_path, tags)
-			encoder_pids[pid] = 1 # for easy lookup - value doesn't matter
-		except KeyboardInterrupt:
-			print "[deleted] %s" % to_path
-			os.unlink(to_path)
-			sys.exit(1)
+		
+		pid = encode_plugin.encodeAudioStream(audio, to_path, tags)
+		encoder_pids[pid] = to_path
 
 def process_playlist(path):
 	ify_print("[playlist]")
@@ -196,6 +195,8 @@ try:
 			sys.exit(0)
 		if option == "--destination" or option == "-d":
 			destination = arg
+		elif option == "-j":
+			concurrency = int(arg)
 		elif option == "--convert-formats":
 			convert_formats = arg.split(",")
 		elif option == "--format" or option == "-o":
@@ -253,4 +254,9 @@ except getopt.GetoptError, error:
 for arg in args:
 	process(arg)
 
-run_encode_queue()
+try: run_encode_queue()
+except KeyboardInterrupt:
+	for file in encoder_pids.values(): 
+		print "[deleted] %s" % file
+		os.unlink(file)
+	sys.exit(1)
