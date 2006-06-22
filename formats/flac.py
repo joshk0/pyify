@@ -4,6 +4,9 @@ import os
 import string
 from util import forkexec
 
+required = { "encode": "flac",
+             "decode": "flac",
+             "gettags": "metaflac" ]
 format = "flac"
 
 # return a dictionary file of the metadata

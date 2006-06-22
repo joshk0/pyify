@@ -3,6 +3,11 @@
 import os
 import string
 from util import copyfileobj
+
+required = { "encode": "oggenc",
+             "decode": "ogg123",
+             "gettags": "vorbiscomment" }
+
 format = "ogg"
 
 # return a dictionary file of the metadata

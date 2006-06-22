@@ -133,7 +133,6 @@ delete = False
 dry_run = False
 plugin_dir = os.path.join(sys.path[0], "formats")
 
-# build formats data structure
 try:
 	shortargs = "hd:o:fq"
 	longargs  = ["help", 

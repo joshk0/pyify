@@ -6,6 +6,7 @@ import popen2
 #from util import copyfileobj
 from util import forkexec, copyfileobj
 
+required = [ "lame" ]
 format = "mp3"
 
 # return a dictionary file of the metadata
