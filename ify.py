@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
+import time
 import os
 import sys
 import string
 import getopt
 import glob
 import imp
+import signal
 
 # Local imports into current namespace
 from util import *
@@ -28,9 +30,51 @@ def process_file(path):
 		process_playlist(path)
 	else:
 		ify_print("Error, unsupported file format \"%s\"", ext)
+
+queue = list()
+jobs_running = 0 # XXX
+encoder_pids = dict() # XXX
+
+def encode_sighandler(signum, frame):
+	global jobs_running, encoder_pids
+
+	pid = os.wait()[0]
+	if pid in encoder_pids:
+		del encoder_pids[pid] # and carry on
+	else:
+		return # ignore
+
+	if len(queue) == 0: # Clean up if we're done
+		jobs_running -= 1
+		return
+	else: # Start a new job
+		process_audio_file_real(*queue.pop(0))
+
+def run_encode_queue():
+	global jobs_running
+
+	# install a CHLD sighandler for adding more stuff
+	signal.signal(signal.SIGCHLD, encode_sighandler)
+
+	# Start as many jobs as specified by concurrency, or as many objects
+	# as there are in the queue, whichever is smaller
+	for job in range(min(concurrency, len(queue))):
+		jobs_running += 1
+		process_audio_file_real(*queue.pop(0))
 	
-# format is already covered
+	while jobs_running > 0:
+		time.sleep(2)
+
 def process_audio_file(from_path, to_path):
+	# [6] is filesize in bytes
+	if os.path.isfile(to_path) and os.stat(to_path)[6] > 0 and not force:
+		ify_print("[up-to-date] %s", to_path)
+		return
+
+	queue.append([from_path, to_path])
+
+# format is already covered
+def process_audio_file_real(from_path, to_path):
 	''' Does no more and no less than taking the file in from_path,
 	    using its extension to determine its file type, and converting
 		it to the format specified in the eponymous variable to the file
@@ -41,11 +85,6 @@ def process_audio_file(from_path, to_path):
 		specified. '''
 
 	old_ext = os.path.splitext(from_path)[1][1:]
-
-	# [6] is filesize in bytes
-	if os.path.isfile(to_path) and os.stat(to_path)[6] > 0 and not force:
-		ify_print("[up-to-date] %s", to_path)
-		return
 		
 	ify_print("[%s->%s] %s", old_ext, format, from_path)
 	
@@ -54,7 +93,9 @@ def process_audio_file(from_path, to_path):
 		encode_plugin = formats[format]
 		tags  = decode_plugin.getMetadata(from_path)
 		audio = decode_plugin.getAudioStream(from_path)
-		try: encode_plugin.encodeAudioStream(audio, to_path, tags)
+		try:
+			pid = encode_plugin.encodeAudioStream(audio, to_path, tags)
+			encoder_pids[pid] = 1 # for easy lookup - value doesn't matter
 		except KeyboardInterrupt:
 			print "[deleted] %s" % to_path
 			os.unlink(to_path)
@@ -117,13 +158,14 @@ def usage():
 		-o FMT or --format=FMT        convert files to this format
 		-f or --force                 convert even if output file is already
 	                                  present
+		-j N                          runs N encoding jobs at once 
 		-q or --quiet                 don't print any output
 		--delete                      delete originals after converting
 		--dry-run                     don't do anything, just print actions"""
 									
-#uses gnu_getopts...there's also a realllllly nifty optparse module
-#lests you specify actions, default values, argument types, etc,
-#but this was easier on my brain at 12:00AM wednesday night
+# uses gnu_getopts...there's also a realllllly nifty optparse module
+# lets you specify actions, default values, argument types, etc,
+# but this was easier on my brain at 12:00AM wednesday night
 destination = os.getcwd()
 convert_formats = None
 format = "wav"
@@ -132,9 +174,10 @@ quiet = False
 delete = False
 dry_run = False
 plugin_dir = os.path.join(sys.path[0], "formats")
+concurrency = 1
 
 try:
-	shortargs = "hd:o:fq"
+	shortargs = "hd:o:fqj:"
 	longargs  = ["help", 
 	             "destination=", 
 				 #changed from convert-formats
@@ -209,3 +252,5 @@ except getopt.GetoptError, error:
 
 for arg in args:
 	process(arg)
+
+run_encode_queue()

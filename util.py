@@ -1,4 +1,4 @@
-from os import popen2, fork, wait, execvp, pipe, dup2
+from os import popen2, fork, wait, execvp, pipe, dup2, setpgrp
 import sys
 
 # execute child process which will optionally use
@@ -15,8 +15,7 @@ def forkexec(args, file_stdin=None, file_stdout=None):
 			#os.close(file_stdout.flieno())
 		execvp(args[0], args)
 	elif pid > 0:
-		# pry this will have to change...should we return pid?
-		wait()
+		return pid # ignored right now
 
 #replacement for shutil.copyfileobj that works
 def copyfileobj(src, dst):

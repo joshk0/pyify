@@ -30,5 +30,7 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	for x in metadata.items():
 		encode_command.extend(["-c", string.join(x, "=")])
 
-	forkexec(encode_command, file_stdin=input_stream)
+	pid = forkexec(encode_command, file_stdin=input_stream)
 	input_stream.close()
+
+	return pid

@@ -6,7 +6,7 @@ from util import forkexec
 
 required = { "encode": "flac",
              "decode": "flac",
-             "gettags": "metaflac" ]
+             "gettags": "metaflac" }
 format = "flac"
 
 # return a dictionary file of the metadata
@@ -28,5 +28,7 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	for x in metadata.items():
 		encode_command.extend(["-T", string.join(x, "=")])
 
-	forkexec(encode_command, file_stdin=input_stream)
+	pid = forkexec(encode_command, file_stdin=input_stream)
 	input_stream.close()
+
+	return pid
