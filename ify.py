@@ -36,27 +36,8 @@ queue = list()
 jobs_running = 0 # XXX
 encoder_pids = dict() # XXX
 
-def encode_sighandler(signum, frame):
-	global jobs_running, encoder_pids, lock
-
-	pid = os.wait()[0]
-	
-	if pid in encoder_pids:
-		del encoder_pids[pid] # and carry on
-	else:
-		return # ignore
-
-	if len(queue) == 0: # Clean up if we're done
-		jobs_running -= 1
-		return
-	else: # Start a new job
-		process_audio_file_real(*queue.pop(0))
-
 def run_encode_queue():
-	global jobs_running
-
-	# install a CHLD sighandler for adding more stuff
-	signal.signal(signal.SIGCHLD, encode_sighandler)
+	global jobs_running, encoder_pids
 
 	# Start as many jobs as specified by concurrency, or as many objects
 	# as there are in the queue, whichever is smaller
@@ -65,8 +46,21 @@ def run_encode_queue():
 		process_audio_file_real(*queue.pop(0))
 	
 	while jobs_running > 0:
-		time.sleep(2)
+		(pid, status) = os.waitpid(-1, os.WNOHANG)
 
+		if pid == 0: # No changes
+			time.sleep(1)
+			continue
+
+		if pid in encoder_pids:
+			del encoder_pids[pid] # and carry on
+
+			if len(queue) == 0: # Clean up if we're done
+				jobs_running -= 1
+				continue
+			else: # Start a new job
+				process_audio_file_real(*queue.pop(0))
+		
 def process_audio_file(from_path, to_path):
 	# [6] is filesize in bytes
 	if os.path.isfile(to_path) and os.stat(to_path)[6] > 0 and not force:
@@ -85,11 +79,10 @@ def process_audio_file_real(from_path, to_path):
 		Well, it does do a little bit more - it will not overwrite an 
 		existing file if it's larger than 0 bytes, unless --force is
 		specified. '''
-	global jobs_running
 
 	old_ext = os.path.splitext(from_path)[1][1:]
 		
-	ify_print("(%d) [%s->%s] %s", jobs_running, old_ext, format, from_path)
+	ify_print("[%s->%s] %s", old_ext, format, from_path)
 	
 	if not dry_run:
 		decode_plugin = formats[old_ext]
