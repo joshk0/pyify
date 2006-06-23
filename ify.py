@@ -25,8 +25,8 @@ def process_file(path):
 				os.path.basename(path))
 			return 1
 
-		process_audio_file(path, os.path.join(destination, basename +
-					"." + format))
+		process_audio_file(path, os.path.join(prefs["destination"], basename +
+					"." + prefs["format"]))
 	elif ext == "m3u":
 		process_playlist(path)
 	else:
@@ -63,7 +63,7 @@ def run_encode_queue():
 		
 def process_audio_file(from_path, to_path):
 	# [6] is filesize in bytes
-	if os.path.isfile(to_path) and os.stat(to_path)[6] > 0 and not force:
+	if os.path.isfile(to_path) and os.stat(to_path)[6] > 0 and not prefs["force"]:
 		ify_print("[up-to-date] %s", to_path)
 		return
 
@@ -82,11 +82,11 @@ def process_audio_file_real(from_path, to_path):
 
 	old_ext = os.path.splitext(from_path)[1][1:]
 		
-	ify_print("[%s->%s] %s", old_ext, format, from_path)
+	ify_print("[%s->%s] %s", old_ext, prefs["format"], from_path)
 	
 	if not dry_run:
 		decode_plugin = formats[old_ext]
-		encode_plugin = formats[format]
+		encode_plugin = formats[prefs["format"]]
 		tags  = decode_plugin.getMetadata(from_path)
 		audio = decode_plugin.getAudioStream(from_path)
 		
@@ -99,11 +99,11 @@ def process_playlist(path):
 	
 def process_dir(path, prefix=""):
 	containing_dir = os.path.basename(path) # current toplevel path
-	target_dir = os.path.join(destination, prefix, containing_dir)
+	target_dir = os.path.join(prefs["destination"], prefix, containing_dir)
 	
 	ify_print("[directory] %s" % target_dir)
 
-	if not dry_run and not os.path.isdir(target_dir):
+	if not prefs["dry_run"] and not os.path.isdir(target_dir):
 		os.mkdir(target_dir)
 
 	listing = os.listdir(path)
@@ -125,7 +125,7 @@ def process_dir(path, prefix=""):
 		elif os.path.isfile(file_fullpath):
 			(basename, ext) = os.path.splitext(file)
 			if ext[1:] in formats and check_want_convert(ext[1:]):
-				process_audio_file(file_fullpath, os.path.join(destination, prefix, containing_dir, os.path.splitext(file)[0] + "." + format))
+				process_audio_file(file_fullpath, os.path.join(prefs["destination"], prefix, containing_dir, os.path.splitext(file)[0] + "." + prefs["format"]))
 
 def process(arg):
 	if os.path.isfile(arg):
@@ -136,8 +136,8 @@ def process(arg):
 		ify_print("Error: unrecognized argument \"%s\"", path)
 
 def check_want_convert(ext):
-	if convert_formats == None: return True
-	elif ext.lower() in convert_formats: return True
+	if prefs["convert_formats"] == None: return True
+	elif ext.lower() in prefs["convert_formats"]: return True
 	else: return False
 
 # note that none of this is compatible with ify.pl
@@ -158,15 +158,15 @@ def usage():
 # uses gnu_getopts...there's also a realllllly nifty optparse module
 # lets you specify actions, default values, argument types, etc,
 # but this was easier on my brain at 12:00AM wednesday night
-destination = os.getcwd()
-convert_formats = None
-format = "wav"
-force = False
-quiet = False
-delete = False
-dry_run = False
-plugin_dir = os.path.join(sys.path[0], "formats")
-concurrency = 1
+prefs = { 'destination': os.getcwd(),
+                'convert_formats': None,
+                'format': 'wav',
+                'force': False,
+                'quiet': False,
+                'delete': False,
+                'dry_run': False,
+                'plugin_dir': os.path.join(sys.path[0], "formats"),
+                'concurrency': 1 }
 
 try:
 	shortargs = "hd:o:fqj:"
@@ -187,24 +187,24 @@ try:
 			usage()
 			sys.exit(0)
 		if option == "--destination" or option == "-d":
-			destination = arg
+			prefs['destination'] = arg
 		elif option == "-j":
-			concurrency = int(arg)
+			prefs['concurrency'] = int(arg)
 		elif option == "--convert-formats":
-			convert_formats = arg.split(",")
+			prefs['convert_formats'] = arg.split(",")
 		elif option == "--format" or option == "-o":
-			format = arg
+			prefs['format'] = arg
 		elif option == "--force" or option == "-f":
-			force = True
+			prefs['force'] = True
 		elif option == "--quiet" or option == "-q":
-			quiet = True
+			prefs['quiet'] = True
 		elif option == "--delete" or option == "-r":
-			delete_originals = True
+			prefs['delete_originals'] = True
 		elif option == "--dry-run":
-			dry_run = True
+			prefs['dry_run'] = True
 		elif option == "--plugin-dir":
 			if os.path.exists(arg):
-				plugin_dir = arg
+				prefs['plugin_dir'] = arg
 			else:
 				ify_error("plugin directory does not exist")
 				sys.exit(1)
@@ -217,8 +217,8 @@ try:
 	formats = dict()
 		
 	try:
-		for path in os.listdir(plugin_dir):
-			path = os.path.join(plugin_dir, path)
+		for path in os.listdir(prefs["plugin_dir"]):
+			path = os.path.join(prefs["plugin_dir"], path)
 			if os.path.isfile(path):
 				name, ext = os.path.splitext(os.path.basename(path))
 				file = open(path, "r")
