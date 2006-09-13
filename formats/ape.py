@@ -17,7 +17,9 @@ def getMetadata(path):
 # return open file object with audio stream
 def getAudioStream(path):
 	subargv = ["mac", path, "-", "-d"]
-	return os.popen2(subargv, 'b')[1]
+	(o, i, e) = os.popen3(subargv, 'b')[1]
+	e.close()
+	return i
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
 	# metadata is ignored because monkey's audio sucks
