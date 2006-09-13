@@ -16,7 +16,7 @@ def getMetadata(path):
 
 # return open file object with audio stream
 def getAudioStream(path):
-	subargv = ["ape", path, "-", "-d"]
+	subargv = ["mac", path, "-", "-d"]
 	return os.popen2(subargv, 'b')[1]
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
