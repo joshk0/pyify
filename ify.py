@@ -8,7 +8,6 @@ import getopt
 import glob
 import imp
 import signal
-import mutex
 
 # Local imports into current namespace
 from util import *
@@ -41,7 +40,7 @@ def run_encode_queue():
 
 	# Start as many jobs as specified by concurrency, or as many objects
 	# as there are in the queue, whichever is smaller
-	for job in range(min(concurrency, len(queue))):
+	for job in range(min(prefs['concurrency'], len(queue))):
 		jobs_running += 1
 		process_audio_file_real(*queue.pop(0))
 	
@@ -83,10 +82,16 @@ def process_audio_file_real(from_path, to_path):
 	old_ext = os.path.splitext(from_path)[1][1:]
 		
 	ify_print("[%s->%s] %s", old_ext, prefs["format"], from_path)
+
+	decode_plugin = formats[old_ext]
+	if not in_path(decode_plugin.required["decode"]):
+		raise MissingProgramError(decode_plugin["decode"])
+	if "gettags" in decode_plugin.required and not in_path(decode_plugin.required["gettags"]:
+		raise MissingProgramError(decode_plugin["gettags"])
 	
-	if not dry_run:
-		decode_plugin = formats[old_ext]
+	if not prefs["dry_run"]:
 		encode_plugin = formats[prefs["format"]]
+
 		tags  = decode_plugin.getMetadata(from_path)
 		audio = decode_plugin.getAudioStream(from_path)
 		
@@ -231,10 +236,18 @@ try:
 				else:
 					ify_print("Can't load plugin %s, bad suffix \"%s\"", path,
 							ext)
-		if not format in formats:
+		if not prefs['format'] in formats:
 			raise getopt.GetoptError("Format must be one of {%s}" %
 					string.join(formats.keys()))
+		# Now that format is validated, check that required programs are
+		# available for encoding
+		req = formats[prefs['format']].required
+		if not in_path(req['encode']):
+			raise MissingProgramError(req['encode'])
 
+	except MissingProgramError, error:
+		print "Missing required external program: %s" % error.value
+		sys.exit(1)
 	except ImportError, error:
 		print "Import error has occured: %r" % error.args
 

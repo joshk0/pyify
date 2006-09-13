@@ -1,5 +1,12 @@
-from os import popen2, fork, wait, execvp, pipe, dup2, setpgrp
+from os import popen2, fork, wait, execvp, pipe, dup2, setpgrp, environ
+import os.path
 import sys
+
+class MissingProgramError(Exception):
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return repr(self.value)
 
 # execute child process which will optionally use
 # either sdtdin as it's standard input or stdout as it's
@@ -24,6 +31,13 @@ def copyfileobj(src, dst):
 		if len(buf) > 0: dst.write(buf)
 		else: return
 		if len(buf) < 4096: return
+
+def in_path(file):
+	path = environ["PATH"].split(":")
+	for pathelt in path:
+		if os.path.exists(os.path.join(pathelt, file)):
+			return True
+	return False
 
 # we have a global being defined here in util.py...is this bad idea?
 quiet = False

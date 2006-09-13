@@ -1,6 +1,8 @@
 """ Wav module for ify"""
 from util import copyfileobj
 
+required = dict()
+
 format = "wav"
 
 def getMetadata(path):
