@@ -86,7 +86,7 @@ def process_audio_file_real(from_path, to_path):
 	decode_plugin = formats[old_ext]
 	if "decode" in decode_plugin.rqeuired and not in_path(decode_plugin.required["decode"]):
 		raise MissingProgramError(decode_plugin["decode"])
-	if "gettags" in decode_plugin.required and not in_path(decode_plugin.required["gettags"]:
+	if "gettags" in decode_plugin.required and not in_path(decode_plugin.required["gettags"]):
 		raise MissingProgramError(decode_plugin["gettags"])
 	
 	if not prefs["dry_run"]:
