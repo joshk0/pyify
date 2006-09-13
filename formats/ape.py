@@ -7,7 +7,7 @@ import popen2
 from util import forkexec, copyfileobj
 
 required = { "encode": "mac", "decode": "mac" }
-format = "mp3"
+format = "ape"
 
 # return a dictionary file of the metadata
 # key names are based on output of vorbiscomment
