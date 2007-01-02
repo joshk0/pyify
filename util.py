@@ -9,7 +9,7 @@ class MissingProgramError(Exception):
 		return repr(self.value)
 
 # execute child process which will optionally use
-# either sdtdin as it's standard input or stdout as it's
+# either stdin as it's standard input or stdout as its
 # standard output or both
 def forkexec(args, file_stdin=None, file_stdout=None):
 	pid = fork()
@@ -35,7 +35,7 @@ def copyfileobj(src, dst):
 def in_path(file):
 	path = environ["PATH"].split(":")
 	for pathelt in path:
-		if os.path.exists(os.path.join(pathelt, file)):
+		if os.path.exists(os.path.join(os.path.expanduser(pathelt), file)):
 			return True
 	return False
 
@@ -54,19 +54,3 @@ def ify_error(message, *args):
 	sys.stderr.write("Error: ")
 	sys.stderr.write(message % tuple(args))
 	sys.stderr.write("\n")
-
-class audioFile:
-	"""Represents an abstraction of an audio file. Don't
-	instantiate this class directly. Instead instantiate
-	one of its subclasses.
-	"""
-	
-	# use this constructor to instantiate a file in the
-	# source format.
-	def __init__(self, path, metadata=None):
-		self.path     = path
-		(base, ext)   = os.path.splitext(os.path.basename(path))
-		self.name     = base
-		if not metadata:
-			self.metadata = self.getMetaData()
-	

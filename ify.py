@@ -98,6 +98,10 @@ def process_audio_file_real(from_path, to_path):
 		pid = encode_plugin.encodeAudioStream(audio, to_path, tags)
 		encoder_pids[pid] = to_path
 
+	if prefs["delete"]:
+		os.unlink(from_path)
+		print "[deleted] %s" % from_path
+
 def process_playlist(path):
 	ify_print("[playlist]")
 	print "Playlists are not yet supported!"
@@ -204,7 +208,7 @@ try:
 		elif option == "--quiet" or option == "-q":
 			prefs['quiet'] = True
 		elif option == "--delete" or option == "-r":
-			prefs['delete_originals'] = True
+			prefs['delete'] = True
 		elif option == "--dry-run":
 			prefs['dry_run'] = True
 		elif option == "--plugin-dir":
