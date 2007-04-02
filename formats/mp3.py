@@ -17,7 +17,9 @@ def getMetadata(path):
 # return open file object with audio stream
 def getAudioStream(path):
 	subargv = ["mpg123", "-s", path]
-	return os.popen2(subargv, 'b')[1]
+	(i, o) = os.popen2(subargv, 'b')
+	i.close()
+	return o
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
 	tag_bind = { 'ARTIST': 'a', 

@@ -240,6 +240,7 @@ try:
 				else:
 					ify_print("Can't load plugin %s, bad suffix \"%s\"", path,
 							ext)
+				file.close()
 		if not prefs['format'] in formats:
 			raise getopt.GetoptError("Format must be one of {%s}" %
 					string.join(formats.keys()))

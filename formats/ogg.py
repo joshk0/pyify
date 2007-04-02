@@ -14,15 +14,19 @@ format = "ogg"
 # key names are based on output of vorbiscomment
 def getMetadata(path):
 	command = ["vorbiscomment", "-l", path]
-	tags = os.popen2(command)[1].readlines()
-	tags = [(x[0].upper(), x[1].strip()) for x in [x.split("=") for x in tags]]
+	(i, o) = os.popen2(command)
+	i.close()
+	tags = [(x[0].upper(), x[1].strip()) for x in [x.split("=") for x in o.readlines()]]
+	o.close()
 	tags = dict(tags)
 	return tags
 
 # return open file object with audio stream
 def getAudioStream(path):
 	subargv = ["ogg123", "-d", "wav", "-q", "-f", "-", path]
-	return os.popen2(subargv, 'b')[1]
+	(i, o) = os.popen2(subargv, 'b')
+	i.close()
+	return o
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):
 	encode_command = ["oggenc", "-q4.5", "-Q", "-", "-o", destination]

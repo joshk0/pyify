@@ -19,6 +19,7 @@ def getAudioStream(path):
 	subargv = ["mac", path, "-", "-d"]
 	(o, i, e) = os.popen3(subargv, 'b')
 	e.close()
+	o.close()
 	return i
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):

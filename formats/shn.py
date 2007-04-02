@@ -18,6 +18,8 @@ def getMetadata(path):
 def getAudioStream(path):
 	subargv = ["shorten", "-x", path, "-"]
 	(o, i, e) = os.popen3(subargv, 'b')
+	o.close()
+	e.close()
 	return i
 
 def encodeAudioStream(input_stream, destination, metadata=dict()):

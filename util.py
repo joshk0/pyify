@@ -16,10 +16,10 @@ def forkexec(args, file_stdin=None, file_stdout=None):
 	if pid == 0:
 		if file_stdin:
 			dup2(file_stdin.fileno(), sys.stdin.fileno())
-			#os.close(file_stdin.fileno())
+			os.close(file_stdin.fileno())
 		if file_stdout:
 			dup2(file_stdout.fileno(), sys.stdout.fileno())
-			#os.close(file_stdout.flieno())
+			os.close(file_stdout.flieno())
 		execvp(args[0], args)
 	elif pid > 0:
 		return pid # ignored right now
