@@ -14,6 +14,7 @@ from util import *
 
 def process_file(path):
 	basename, ext = os.path.splitext(path)
+	basename = os.path.basename(path)
 	ext = ext[1:]
 	if formats.has_key(ext):
 		# Be more vocal about this because the user passed the file in 
