@@ -19,7 +19,7 @@ def forkexec(args, file_stdin=None, file_stdout=None):
 			os.close(file_stdin.fileno())
 		if file_stdout:
 			dup2(file_stdout.fileno(), sys.stdout.fileno())
-			os.close(file_stdout.flieno())
+			os.close(file_stdout.fileno())
 		execvp(args[0], args)
 	elif pid > 0:
 		return pid # ignored right now
