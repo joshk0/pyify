@@ -2,7 +2,7 @@
 
 import os
 import string
-from util import copyfileobj
+from util import copyfileobj, forkexec
 
 required = { "encode": "oggenc",
              "decode": "ogg123",

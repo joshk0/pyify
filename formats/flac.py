@@ -17,7 +17,7 @@ def getMetadata(path):
 	tags = [(x[0].upper(), x[1].strip()) for x in [x.split("=") for x in tagsP.readlines()]]
 	tagsP.close()
 	o.close()
-	return tags
+	return dict(tags)
 
 # return open file object with audio stream
 def getAudioStream(path):

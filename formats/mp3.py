@@ -29,7 +29,7 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 				 'GENRE': 'g',
 				 'TRACKNUMBER': 'n' }
 	
-	encode_command = ["lame", "--alt-preset", "standard", "--quiet", 
+	encode_command = ["lame", "-V5", "--quiet", 
 		"--ignore-tag-errors", "--add-id3v2"]
 	
 	# converting *all* metadata keys to upper case equivalents here
