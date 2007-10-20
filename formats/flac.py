@@ -14,7 +14,7 @@ format = "flac"
 def getMetadata(path):
 	command = ["metaflac", "--export-tags-to=-", path]
 	(o, tagsP) = os.popen2(command)
-	tags = [(x[0].upper(), x[1].strip()) for x in [x.split("=") for x in tagsP.readlines()]]
+	tags = [(x[0].upper(), x[1].strip()) for x in [elt for elt in [x.split("=") for x in tagsP.readlines()] if len(elt) == 2]]
 	tagsP.close()
 	o.close()
 	return dict(tags)

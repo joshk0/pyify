@@ -1,12 +1,33 @@
 from os import popen2, fork, wait, execvp, pipe, dup2, setpgrp, environ
 import os.path
 import sys
+import md5
 
 class MissingProgramError(Exception):
 	def __init__(self, value):
 		self.value = value
 	def __str__(self):
 		return repr(self.value)
+
+# Yoinked from Christopher Lenz at
+# http://bitten.cmlenz.net/browser/trunk/bitten/util/md5sum.py
+def getchecksum(filename):
+	"""Generate an MD5 checksum for the specified file.
+
+	   @param filename: the absolute path to the file
+	   @return: string containing the checksum
+	"""
+	checksum = md5.new()
+	fileobj = file(filename, 'rb')
+	try:
+		while True:
+			chunk = fileobj.read(4096)
+			if not chunk:
+				break
+			checksum.update(chunk)
+	finally:
+		fileobj.close()
+	return checksum.hexdigest()
 
 # execute child process which will optionally use
 # either stdin as it's standard input or stdout as its

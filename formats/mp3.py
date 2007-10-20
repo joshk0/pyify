@@ -3,7 +3,7 @@
 import os
 import string
 import popen2
-#from util import copyfileobj
+import sys
 from util import forkexec, copyfileobj
 
 required = { "encode": "lame", "decode": "mpg123" }
@@ -12,11 +12,30 @@ format = "mp3"
 # return a dictionary file of the metadata
 # key names are based on output of vorbiscomment
 def getMetadata(path):
-	return dict()
+	try: import eyeD3
+	except:
+		sys.stderr.write("Warning: no ID3 support, please install python-eyed3")
+		return dict()
+	
+	tag = eyeD3.Tag()
+	tag.link(path)
+
+	tags = { 'ARTIST': tag.getArtist(),
+		'ALBUM': tag.getAlbum(),
+		'TITLE': tag.getTitle(),
+		'DATE': tag.getDate(),
+		'GENRE': tag.getGenre(),
+		'TRACKNUMBER': tag.getTrackNum()[0] }
+
+	for tag in tags:
+		if tag[1] == "" or tag[1] == None:
+			del tags[tag[0]]
+
+	return tags
 
 # return open file object with audio stream
 def getAudioStream(path):
-	subargv = ["mpg123", "-s", path]
+	subargv = ["mpg123", "-q", "-s", path]
 	(i, o) = os.popen2(subargv, 'b')
 	i.close()
 	return o

@@ -16,7 +16,7 @@ def getMetadata(path):
 	command = ["vorbiscomment", "-l", path]
 	(i, o) = os.popen2(command)
 	i.close()
-	tags = [(x[0].upper(), x[1].strip()) for x in [x.split("=") for x in o.readlines()]]
+	tags = [(x[0].upper(), x[1].strip()) for x in [elt for elt in [x.split("=") for x in o.readlines()] if len(elt) == 2]]
 	o.close()
 	tags = dict(tags)
 	return tags
@@ -32,7 +32,9 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	encode_command = ["oggenc", "-q4.5", "-Q", "-", "-o", destination]
 	
 	for x in metadata.items():
-		encode_command.extend(["-c", string.join(x, "=")])
+		bah = string.join(x, "=")
+		encode_command.extend(["-c"])
+		encode_command.extend([bah])
 
 	pid = forkexec(encode_command, file_stdin=input_stream)
 	input_stream.close()
