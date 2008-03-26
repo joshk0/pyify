@@ -22,3 +22,6 @@ def encodeAudioStream(inputStream, destination, metadata=None):
 	inputStream.close()
 
 	return pid
+
+def tagOutputFile(path, tags):
+  return

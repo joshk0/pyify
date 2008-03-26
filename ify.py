@@ -8,6 +8,7 @@ import getopt
 import glob
 import imp
 import signal
+import shutil
 
 # Local imports into current namespace
 from util import *
@@ -53,6 +54,10 @@ def run_encode_queue():
 			continue
 
 		if pid in encoder_pids:
+			# Run the tag hook.
+			encode_plugin = formats[prefs["format"]]
+			encode_plugin.tagOutputFile(*encoder_pids[pid])
+			
 			del encoder_pids[pid] # and carry on
 
 			if len(queue) == 0: # Clean up if we're done
@@ -65,6 +70,13 @@ def process_audio_file(from_path, to_path):
 	# [6] is filesize in bytes
 	if os.path.isfile(to_path) and os.stat(to_path)[6] > 0 and not prefs["force"]:
 		ify_print("[up-to-date] %s", to_path)
+		return
+	
+	old_ext = os.path.splitext(from_path)[1][1:]
+
+	if old_ext == prefs["format"]:
+		ify_print("[copy] %s", from_path)
+		shutil.copyfile(from_path, to_path)
 		return
 
 	queue.append([from_path, to_path])
@@ -79,7 +91,7 @@ def process_audio_file_real(from_path, to_path):
 		Well, it does do a little bit more - it will not overwrite an 
 		existing file if it's larger than 0 bytes, unless --force is
 		specified. '''
-
+	
 	old_ext = os.path.splitext(from_path)[1][1:]
 		
 	ify_print("[%s->%s] %s", old_ext, prefs["format"], from_path)
@@ -97,7 +109,7 @@ def process_audio_file_real(from_path, to_path):
 		audio = decode_plugin.getAudioStream(from_path)
 		
 		pid = encode_plugin.encodeAudioStream(audio, to_path, tags)
-		encoder_pids[pid] = to_path
+		encoder_pids[pid] = (to_path, tags)
 
 	if prefs["delete"]:
 		os.unlink(from_path)
@@ -268,7 +280,7 @@ for arg in args:
 
 try: run_encode_queue()
 except KeyboardInterrupt:
-	for file in encoder_pids.values(): 
-		print "[deleted] %s" % file
-		os.unlink(file)
+	for job in encoder_pids.values(): 
+		print "[deleted] %s" % job[0]
+		os.unlink(job[0])
 	sys.exit(1)

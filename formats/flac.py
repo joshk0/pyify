@@ -14,7 +14,7 @@ format = "flac"
 def getMetadata(path):
 	command = ["metaflac", "--export-tags-to=-", path]
 	(o, tagsP) = os.popen2(command)
-	tags = [(x[0].upper(), x[1].strip()) for x in [elt for elt in [x.split("=") for x in tagsP.readlines()] if len(elt) == 2]]
+	tags = [(x[0].upper(), unicode(x[1].strip(), 'utf-8')) for x in [elt for elt in [x.split("=", 1) for x in tagsP.readlines()] if len(elt) == 2]]
 	tagsP.close()
 	o.close()
 	return dict(tags)
@@ -35,3 +35,6 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	input_stream.close()
 
 	return pid
+
+def tagOutputFile(path, tags):
+  return

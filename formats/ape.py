@@ -30,3 +30,6 @@ def encodeAudioStream(input_stream, destination, metadata=dict()):
 	input_stream.close()
 
 	return pid
+
+def tagOutputFile(path, tags):
+  return
