@@ -97,10 +97,14 @@ def process_audio_file_real(from_path, to_path):
 	ify_print("[%s->%s] %s", old_ext, prefs["format"], from_path)
 
 	decode_plugin = formats[old_ext]
-	if "decode" in decode_plugin.required and not in_path(decode_plugin.required["decode"]):
-		raise MissingProgramError(decode_plugin["decode"])
-	if "gettags" in decode_plugin.required and not in_path(decode_plugin.required["gettags"]):
-		raise MissingProgramError(decode_plugin["gettags"])
+	try:
+		if "decode" in decode_plugin.required and not in_path(decode_plugin.required["decode"]):
+			raise MissingProgramError(decode_plugin.required["decode"])
+		if "gettags" in decode_plugin.required and not in_path(decode_plugin.required["gettags"]):
+			raise MissingProgramError(decode_plugin.required["gettags"])
+	except MissingProgramError, error:
+		print "Missing required external program: %s" % error.value
+		sys.exit(1)
 	
 	if not prefs["dry_run"]:
 		encode_plugin = formats[prefs["format"]]
