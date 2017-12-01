@@ -1,11 +1,8 @@
 What is pyify?
 --------------
 
-Pyify is a command-line, recursive audio transcoding tool that is convenient
-for mass conversion of music for portable audio devices or CD archival. I
-wrote a Perl version several years ago that, though eventually robust, heavily
-depended on the use of regular expressions, Perl hacks, and the code was
-more or less hard to read.
+pyify is a command-line, recursive audio transcoding tool that is convenient
+for mass conversion of music for portable audio devices or CD archival.
 
 But what does it do anyway?
 
@@ -15,14 +12,15 @@ But what does it do anyway?
   destination path
 - Copies album art into destination
 - Can be extended with additional format plugins
+- Can take advantage of multiple cores with a built-in jobserver.
 
 The actual conversions are done by the command-line decoders and encoders
 for the respective formats. Pyify handles directory creation, metadata mapping,
-and file renaming directly.
+job management, and file renaming directly.
 
-Pyify tries to mostly remain faithful to the output and command-line calling
-convention of the original ify. It is eventually meant to surpass ify in
-elegance and extensibility.
+pyify tries to mostly remain faithful to the output and command-line calling
+convention of the original ify, which was written in Perl. It is eventually
+meant to surpass ify in elegance and extensibility.
 
 			-- Joshua Kwan <joshk@triplehelix.org>
 			   Brandon Lewis <brandon_lewis@berkeley.edu>
